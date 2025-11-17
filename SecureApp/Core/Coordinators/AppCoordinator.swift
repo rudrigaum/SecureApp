@@ -14,23 +14,36 @@ final class AppCoordinator: Coordinator {
     var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
     private let window: UIWindow
+    private let authService: AuthenticationServiceProtocol
     
     // MARK: - Initializer
     init(navigationController: UINavigationController, window: UIWindow) {
         self.navigationController = navigationController
         self.window = window
+        self.authService = AuthenticationService()
     }
     
     // MARK: - Coordinator Lifecycle
     func start() {
         window.rootViewController = navigationController
         window.makeKeyAndVisible()
-        showAuthenticationFlow()
+        
+        if authService.isUserLoggedIn() {
+            print("AppCoordinator: User is already logged in. Showing Main Flow.")
+            showMainFlow()
+        } else {
+            print("AppCoordinator: User is not logged in. Showing Authentication Flow.")
+            showAuthenticationFlow()
+        }
     }
     
     // MARK: - Private Flow Methods
     private func showAuthenticationFlow() {
-        let authCoordinator = AuthenticationCoordinator(navigationController: navigationController)
+        let authCoordinator = AuthenticationCoordinator(
+            navigationController: navigationController,
+            authService: authService
+        )
+        
         authCoordinator.delegate = self
         addChild(authCoordinator)
         authCoordinator.start()

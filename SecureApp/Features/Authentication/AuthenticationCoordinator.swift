@@ -14,15 +14,16 @@ final class AuthenticationCoordinator: Coordinator {
     var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
     weak var delegate: AuthenticationCoordinatorDelegate?
+    private let authService: AuthenticationServiceProtocol
     
     // MARK: - Initializer
-    init(navigationController: UINavigationController) {
+    init(navigationController: UINavigationController, authService: AuthenticationServiceProtocol) {
         self.navigationController = navigationController
+        self.authService = authService
     }
     
     // MARK: - Coordinator Lifecycle
     func start() {
-        let authService = AuthenticationService()
         let viewModel = LoginViewModel(authenticationService: authService)
         let viewController = LoginViewController(viewModel: viewModel)
         
@@ -33,7 +34,7 @@ final class AuthenticationCoordinator: Coordinator {
         navigationController.setViewControllers([viewController], animated: true)
         print("AuthenticationCoordinator: Real LoginViewController presented.")
     }
-    
+
     private func finishAuthentication() {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
