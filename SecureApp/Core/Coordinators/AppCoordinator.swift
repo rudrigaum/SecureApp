@@ -29,15 +29,13 @@ final class AppCoordinator: Coordinator {
         window.makeKeyAndVisible()
         
         if authService.isUserLoggedIn() {
-            print("AppCoordinator: User is already logged in. Showing Main Flow.")
             showMainFlow()
         } else {
-            print("AppCoordinator: User is not logged in. Showing Authentication Flow.")
             showAuthenticationFlow()
         }
     }
     
-    // MARK: - Private Flow Methods
+    // MARK: - Flow Handlers
     private func showAuthenticationFlow() {
         let authCoordinator = AuthenticationCoordinator(
             navigationController: navigationController,
@@ -47,23 +45,40 @@ final class AppCoordinator: Coordinator {
         authCoordinator.delegate = self
         addChild(authCoordinator)
         authCoordinator.start()
-        print("AppCoordinator: Starting Authentication Flow via AuthenticationCoordinator.")
+        print("AppCoordinator: Starting Authentication Flow via Coordinator.")
     }
     
     private func showMainFlow() {
-        let placeholderVC = UIViewController()
-        placeholderVC.view.backgroundColor = .systemGreen
-        placeholderVC.title = "Main Flow (Placeholder)"
-        navigationController.setViewControllers([placeholderVC], animated: true)
-        print("AppCoordinator: Starting Main App Flow...")
+        let mainCoordinator = MainCoordinator(
+            navigationController: navigationController
+        )
+        
+        mainCoordinator.delegate = self
+        addChild(mainCoordinator)
+        mainCoordinator.start()
+        print("AppCoordinator: Starting Main App Flow via MainCoordinator.")
+    }
+    
+    // MARK: - Sign Out Management
+    private func returnToAuthentication() {
+        navigationController.viewControllers = []
+        showAuthenticationFlow()
     }
 }
 
-// MARK: - AuthenticationCoordinatorDelegate
+// MARK: - Delegate Conformance
 extension AppCoordinator: AuthenticationCoordinatorDelegate {
     func didFinishAuthentication(coordinator: Coordinator) {
         removeChild(coordinator)
         print("AppCoordinator: Authentication finished. Starting Main Flow.")
         showMainFlow()
+    }
+}
+
+extension AppCoordinator: MainCoordinatorDelegate {
+    func didRequestSignOut(coordinator: Coordinator) {
+        removeChild(coordinator)
+        returnToAuthentication()
+        print("AppCoordinator: Sign out request received. Returning to Login.")
     }
 }
