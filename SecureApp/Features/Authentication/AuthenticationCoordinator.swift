@@ -1,0 +1,44 @@
+//
+//  AuthenticationCoordinator.swift
+//  SecureApp
+//
+//  Created by Rodrigo Cerqueira Reis on 07/11/25.
+//
+
+import Foundation
+import UIKit
+
+final class AuthenticationCoordinator: Coordinator {
+    
+    // MARK: - Properties
+    var childCoordinators: [Coordinator] = []
+    var navigationController: UINavigationController
+    weak var delegate: AuthenticationCoordinatorDelegate?
+    private let authService: AuthenticationServiceProtocol
+    
+    // MARK: - Initializer
+    init(navigationController: UINavigationController, authService: AuthenticationServiceProtocol) {
+        self.navigationController = navigationController
+        self.authService = authService
+    }
+    
+    // MARK: - Coordinator Lifecycle
+    func start() {
+        let viewModel = LoginViewModel(authenticationService: authService)
+        let viewController = LoginViewController(viewModel: viewModel)
+        
+        viewModel.onLoginSuccess = { [weak self] in
+            self?.finishAuthentication()
+        }
+        
+        navigationController.setViewControllers([viewController], animated: true)
+        print("AuthenticationCoordinator: Real LoginViewController presented.")
+    }
+
+    private func finishAuthentication() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.delegate?.didFinishAuthentication(coordinator: self)
+        }
+    }
+}
